@@ -2,7 +2,7 @@
 #include "hardware/gpio.h"
 
 const uint LED_PIN = 25;
-
+const int d = 0;
 int main(){
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
@@ -14,3 +14,4 @@ int main(){
         sleep_ms(1000);
     }
 }
+// конец
