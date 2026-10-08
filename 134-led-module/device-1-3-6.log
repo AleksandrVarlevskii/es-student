@@ -3,17 +3,17 @@
 устройство: 2e8a:000a
 серийный номер: 503558607A62241F
 порт: COM7
-начало: 2026-10-08T16:19:58
+начало: 2026-10-08T16:23:57
    0.000 --> v
-   0.000 <-- dbg main:70 got v
-   0.000 <-- device: es-led-module 1.0.0, built Oct  8 2026 16:15:46, log level 3
+   0.016 <-- dbg main:70 got v
+   0.016 <-- device: es-led-module 1.0.0, built Oct  8 2026 16:23:25, log level 3
    1.016 --> e
-   1.016 <-- dbg main:70 got e
+   1.032 <-- dbg main:70 got e
    1.032 <-- inf handle_command:26 led on
-   2.032 --> d
+   2.047 --> d
    2.047 <-- dbg main:70 got d
    2.047 <-- inf handle_command:31 led off
    3.063 --> q
    3.063 <-- dbg main:70 got q
-   3.063 <-- inf handle_command:35 unknown command: q
+   3.063 <-- err handle_command:35 unknown command: q
 итог: отправлено команд 4
