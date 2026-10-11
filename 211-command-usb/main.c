@@ -38,7 +38,7 @@ void handle_command(const char *command)
     }else if (strcmp(command, "info") == 0){
         device_info();
     }else{
-        LOG_ERR("unknown command: %c\n", command);
+        LOG_ERR("unknown command: %s\n", command);
     }
 }
 
