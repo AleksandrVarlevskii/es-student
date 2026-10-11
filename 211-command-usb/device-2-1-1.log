@@ -1,0 +1,28 @@
+задание: 2.1.1
+проект: 211-command-usb
+устройство: 2e8a:000a
+серийный номер: 503558607A62241F
+порт: COM7
+начало: 2026-10-11T18:42:48
+   0.000 --> enable
+   0.141 <-- enable
+   0.141 <-- dbg read_line:61 got enable
+   0.141 <-- inf handle_command:30 led on
+   2.156 --> disable
+   2.297 <-- disable
+   2.297 <-- dbg read_line:61 got disable
+   2.297 <-- inf handle_command:35 led off
+   4.313 --> info
+   4.406 <-- info
+   4.406 <-- dbg read_line:61 got info
+   4.406 <-- project: 211-command-usb
+   4.406 <-- repo: https://github.com/AleksandrVarlevskii/es-student
+   4.406 <-- board: pico
+   4.406 <-- serial: 503558607A62241F
+   4.406 <-- chip: manufacturer 0x927, part 0x0002, revision 2
+   4.406 <-- pico-sdk: 2.3.0
+   6.438 --> nosuchcommand
+   6.703 <-- nosuchcommand
+   6.703 <-- dbg read_line:61 got nosuchcommand
+   6.703 <-- err handle_command:41 unknown command: t
+итог: отправлено команд 4, принято строк 17

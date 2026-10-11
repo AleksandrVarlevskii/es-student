@@ -74,6 +74,8 @@ void read_line(void)
     }
 }
 
+typedef void (*command_handler_t)(void);
+
 
 int main(){
     stdio_init_all();
