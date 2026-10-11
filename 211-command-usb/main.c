@@ -5,6 +5,7 @@
 #include "log.h"
 #include "device.h"
 #include "memory.h"
+#include "command.h"
 
 const uint BUTTON_PIN = 15;
 const uint DEBOUNCE_MS = 20;
@@ -14,7 +15,6 @@ const uint DEBOUNCE_MS = 20;
 char line[LINE_SIZE];
 uint line_length = 0;
 
-typedef void (*command_handler_t)(void);
 void cmd_enable(void){
     led_set(true);
     LOG_INF("led %s\n", led_is_on() ? "on" : "off");
@@ -33,16 +33,14 @@ void cmd_ping(void)
 {
     printf("pong\n");
 }
-void cmd_mem_info(){
+void cmd_mem_info(void){
     mem_info();
 }
 
+void cmd_fw_info(void){
+    fw_info();
+}
 
-struct command_t
-{
-    const char *name;
-    command_handler_t handler;
-};
 
 
 
@@ -54,16 +52,17 @@ const struct command_t commands[] = {
     { "version", cmd_version },
     {"ping", cmd_ping },
      {"mem_info", cmd_mem_info },
+     {"fw_info", cmd_fw_info},
 };
 
-#define COMMAND_COUNT (sizeof(commands) / sizeof(commands[0]))
+const uint command_count = sizeof(commands) / sizeof(commands[0]);
 
 
 
 
 void handle_command(const char *command)
 {
-    for (uint i = 0; i < COMMAND_COUNT; i++)
+    for (uint i = 0; i < command_count; i++)
     {
         if (strcmp(command, commands[i].name) == 0)
         {
