@@ -1,11 +1,67 @@
 #include "device.h"
 
+#include <stddef.h>
 #include <stdio.h>
 
 #include "pico/unique_id.h"
 #include "hardware/regs/addressmap.h"
 #include "hardware/regs/sysinfo.h"
 #include "pico/version.h"
+
+
+struct info_t device_card;
+
+void device_card_init(void)
+{
+    volatile uint32_t *chip_id = (uint32_t *)(SYSINFO_BASE + SYSINFO_CHIP_ID_OFFSET);
+    uint32_t id = *chip_id;
+
+    device_card.revision = (uint8_t)(
+        (id & SYSINFO_CHIP_ID_REVISION_BITS) >> SYSINFO_CHIP_ID_REVISION_LSB
+    );
+
+    device_card.version = (uint32_t)FIRMWARE_VERSION; 
+    snprintf(device_card.name, sizeof(device_card.name), "%s", DEVICE_NAME);
+}
+
+void dev_info(void){
+    size_t fields = sizeof(device_card.version) + sizeof(device_card.name) + sizeof(device_card.revision);
+    size_t size_device_card = sizeof(device_card);
+
+
+    printf("%-15s %-10s %6s %6s %s\n",
+            "struct", "address", "size", "offset", "value");
+
+    printf("%-15s 0x%08x %5zu\n",
+            "device_card",
+            (unsigned)(uintptr_t)&device_card,
+            size_device_card);
+
+    printf("- %-13s 0x%08x %5zu %6zu %u\n",
+            "revision",
+            (unsigned)(uintptr_t)&device_card.revision,
+            sizeof(device_card.revision),
+            offsetof(struct info_t, revision),
+            (unsigned)device_card.revision);
+    printf("- %-13s 0x%08x %5zu %6zu 0x%08x\n",
+            "version",
+            (unsigned)(uintptr_t)&device_card.version,
+            sizeof(device_card.version),
+            offsetof(struct info_t, version),
+            (unsigned)device_card.version);
+    printf("- %-13s 0x%08x %5zu %6zu %s\n",
+            "name",
+            (unsigned)(uintptr_t)device_card.name,
+            sizeof(device_card.name),
+            offsetof(struct info_t, name),
+            device_card.name);
+    
+    printf("fields %zu, sizeof %zu, padding %zu\n", fields, size_device_card , size_device_card-fields );
+}
+
+
+
+
 
 void device_info(void){
     volatile uint32_t *chip_id = (uint32_t *)(SYSINFO_BASE + SYSINFO_CHIP_ID_OFFSET);

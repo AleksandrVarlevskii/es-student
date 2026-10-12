@@ -1,6 +1,10 @@
-#include "pico/stdlib.h"
+
 #include <stdio.h>
 #include <string.h>
+
+
+#include "pico/stdlib.h"
+
 #include "led.h"
 #include "log.h"
 #include "device.h"
@@ -41,7 +45,9 @@ void cmd_fw_info(void){
     fw_info();
 }
 
-
+void cmd_dev_info(void){
+    dev_info();
+}
 
 
 
@@ -52,7 +58,8 @@ const struct command_t commands[] = {
     { "version", cmd_version },
     {"ping", cmd_ping },
      {"mem_info", cmd_mem_info },
-     {"fw_info", cmd_fw_info},
+     {"fw_info", cmd_fw_info },
+     {"dev_info", cmd_dev_info },
 };
 
 const uint command_count = sizeof(commands) / sizeof(commands[0]);
@@ -128,7 +135,7 @@ void read_line(void)
 
 int main(){
     stdio_init_all();
-
+    device_card_init();  
     led_init();
 
     gpio_init(BUTTON_PIN);
