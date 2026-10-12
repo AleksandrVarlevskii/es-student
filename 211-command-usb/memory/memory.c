@@ -25,6 +25,7 @@ extern char __StackTop;
 
 #define SRAM_SIZE_BYTES (264u * 1024u)
 #define ROM_SIZE_BYTES  ( 16u * 1024u)
+#define VECTOR_TABLE 0x10000100
 
 int main(void);
 
@@ -187,11 +188,11 @@ void boot_info(void){
     volatile  uint32_t *gpio_in = (volatile uint32_t *)0xd0000004u;
     uint32_t level = (*gpio_in >> led_pin()) & 1u;
 
-    printf("%-14s - 0x%08x\n", "vector table", (unsigned)(uintptr_t)vectors);
-    printf("%-14s - 0x%08x\n", "stack top",    (unsigned)stack_top);
-    printf("%-14s - 0x%08x\n", "reset",        (unsigned)reset_handler);
-    printf("%-14s - 0x%08x\n", "reset (even)", (unsigned)reset_handler_even);
-    printf("%-14s - 0x%08x\n", "gpio in",      (unsigned)(uintptr_t)gpio_in);
-    printf("%-14s - %u\n",     "led bit",      (unsigned)level);
-    printf("%-14s - %u\n",     "gpio_get",     (unsigned)gpio_get(led_pin()));
+    printf("%-14s  0x%08x\n", "vector table", (unsigned)(uintptr_t)vectors);
+    printf("%-14s  0x%08x\n", "stack top",    (unsigned)stack_top);
+    printf("%-14s  0x%08x\n", "reset",        (unsigned)reset_handler);
+    printf("%-14s  0x%08x\n", "reset (even)", (unsigned)reset_handler_even);
+    printf("%-14s  0x%08x\n", "gpio in",      (unsigned)(uintptr_t)gpio_in);
+    printf("%-14s  %u\n",     "led bit",      (unsigned)level);
+    printf("%-14s  %u\n",     "gpio_get",     (unsigned)gpio_get(led_pin()));
 }
