@@ -126,23 +126,22 @@ void mem_info(void)
 uint32_t data_variable = 100;
 uint32_t bss_variable;
 
-static void print_func(const char *name, void (*fn)(void))
-{
-    uintptr_t addr = (uintptr_t)fn;
-    uint16_t  code = *(const uint16_t *)(addr & ~1u);
-    printf("%-16s 0x%08x  0x%04x\n", name, (unsigned)addr, code);
-}
 
 void fw_info(void)
 {
+    data_variable++;
+    bss_variable++;
     uint32_t  stack_variable = 1946;
     uint32_t *heap_variable  = malloc(sizeof(uint32_t));
-    *heap_variable = 1951;
-
+    
+    if (heap_variable != NULL)
+    {
+        *heap_variable = 1951;
+    }
     printf("object          address     value\n");
 
-    print_func("main",    (void (*)(void))main);
-    print_func("fw_info", fw_info);
+    printf("%-16s 0x%08x  0x%04x\n", "main", (unsigned)(uintptr_t)main,*(const uint16_t *)((uintptr_t)main & ~1u) );
+    printf("%-16s 0x%08x  0x%04x\n", "fw_info", (unsigned)(uintptr_t)fw_info,*(const uint16_t *)((uintptr_t)fw_info & ~1u) );
 
     printf("%-16s 0x%08x\n", "commands",
            (unsigned)(uintptr_t)commands);
