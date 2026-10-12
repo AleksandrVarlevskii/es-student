@@ -3,24 +3,24 @@
 устройство: 2e8a:000a
 серийный номер: 503558607A62241F
 порт: COM7
-начало: 2026-10-12T19:04:10
+начало: 2026-10-12T19:10:48
    0.000 --> clk_info
-   0.172 <-- clk_info
+   0.156 <-- clk_info
    0.172 <-- dbg read_line:121 got clk_info
    0.172 <-- signal     set_khz measured_khz
    0.172 <-- clk_ref      12000        12001
    0.172 <-- clk_sys     125000       125000
-   0.172 <-- clk_peri    125000       125001
+   0.172 <-- clk_peri    125000       125000
    0.172 <-- clk_usb      48000        48000
    0.172 <-- clk_adc      48000        48000
-   0.172 <-- clk_rtc          -           47
+   0.172 <-- rosc             -         5420
    2.000 --> info
    2.094 <-- info
    2.094 <-- dbg read_line:121 got info
    2.094 <-- project: 221-command-time
-   2.109 <-- repo: https://github.com/AleksandrVarlevskii/es-student
-   2.109 <-- board: pico
-   2.109 <-- serial: 503558607A62241F
-   2.109 <-- chip: manufacturer 0x927, part 0x0002, revision 2
-   2.109 <-- pico-sdk: 2.3.0
+   2.094 <-- repo: https://github.com/AleksandrVarlevskii/es-student
+   2.094 <-- board: pico
+   2.094 <-- serial: 503558607A62241F
+   2.094 <-- chip: manufacturer 0x927, part 0x0002, revision 2
+   2.094 <-- pico-sdk: 2.3.0
 итог: отправлено команд 2, принято строк 17
