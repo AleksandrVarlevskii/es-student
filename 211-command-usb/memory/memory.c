@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+
 #include "pico/stdlib.h"
 #include "hardware/regs/addressmap.h"
+
+#include "led.h"
 #include "memory.h"
 #include "command.h"
 #include "device.h"
-#include <stdlib.h>
+
 extern char __flash_binary_start;
 extern char __flash_binary_end;
 extern char __boot2_start__;
@@ -27,7 +31,7 @@ int main(void);
 static void row(const char *name, uintptr_t start, uintptr_t end)
 {
     printf("%-10s 0x%08x 0x%08x %8u\n",
-           name, (unsigned)start, (unsigned)end, (unsigned)(end - start));
+            name, (unsigned)start, (unsigned)end, (unsigned)(end - start));
 }
 
 void mem_info(void)
@@ -84,42 +88,42 @@ void mem_info(void)
         (uintptr_t)&__StackTop);
 
     const uintptr_t image_sz  = (uintptr_t)&__flash_binary_end
-                              - (uintptr_t)&__flash_binary_start;
+                                - (uintptr_t)&__flash_binary_start;
     const uintptr_t boot2_sz  = (uintptr_t)&__boot2_end__
-                              - (uintptr_t)&__boot2_start__;
+                                - (uintptr_t)&__boot2_start__;
     const uintptr_t text_sz   = (uintptr_t)&__etext
-                              - (uintptr_t)&__boot2_end__;
+                                - (uintptr_t)&__boot2_end__;
     const uintptr_t dataf_sz  = (uintptr_t)&__data_end__
-                              - (uintptr_t)&__data_start__;
+                                - (uintptr_t)&__data_start__;
     const uintptr_t datar_sz  = (uintptr_t)&__data_end__
-                              - (uintptr_t)&__data_start__;
+                                - (uintptr_t)&__data_start__;
     const uintptr_t bss_sz    = (uintptr_t)&__bss_end__
-                              - (uintptr_t)&__bss_start__;
+                                - (uintptr_t)&__bss_start__;
     const uintptr_t heap_sz   = (uintptr_t)&__HeapLimit
-                              - (uintptr_t)&__bss_end__;
+                                - (uintptr_t)&__bss_end__;
     const uintptr_t stack_sz  = (uintptr_t)&__StackTop
-                              - (uintptr_t)&__StackBottom;
+                                - (uintptr_t)&__StackBottom;
 
     printf("\ntotal\n");
 
     printf("  flash image    %8u = boot2 %u + text %u + data %u\n",
-           (unsigned)image_sz,
-           (unsigned)boot2_sz,
-           (unsigned)text_sz,
-           (unsigned)dataf_sz);
+            (unsigned)image_sz,
+            (unsigned)boot2_sz,
+            (unsigned)text_sz,
+            (unsigned)dataf_sz);
 
     printf("  flash free     %8u of %u\n",
-           (unsigned)(PICO_FLASH_SIZE_BYTES - image_sz),
-           (unsigned)PICO_FLASH_SIZE_BYTES);
+            (unsigned)(PICO_FLASH_SIZE_BYTES - image_sz),
+            (unsigned)PICO_FLASH_SIZE_BYTES);
 
     printf("  ram used       %8u = data %u + bss %u\n",
-           (unsigned)(datar_sz + bss_sz),
-           (unsigned)datar_sz,
-           (unsigned)bss_sz);
+            (unsigned)(datar_sz + bss_sz),
+            (unsigned)datar_sz,
+            (unsigned)bss_sz);
 
     printf("  ram free       %8u for heap and %u for stack\n",
-           (unsigned)heap_sz,
-           (unsigned)stack_sz);
+            (unsigned)heap_sz,
+            (unsigned)stack_sz);
 }
 
 
@@ -174,3 +178,20 @@ void fw_info(void)
     free(heap_variable);
 }
 
+void boot_info(void){
+    const uint32_t *vectors = (const uint32_t *)VECTOR_TABLE;
+
+    uint32_t stack_top = vectors[0];
+    uint32_t reset_handler = vectors[1];
+    uint32_t reset_handler_even = (uint32_t)((uintptr_t)reset_handler & ~1u);
+    volatile  uint32_t *gpio_in = (volatile uint32_t *)0xd0000004u;
+    uint32_t level = (*gpio_in >> led_pin()) & 1u;
+
+    printf("%-14s - 0x%08x\n", "vector table", (unsigned)(uintptr_t)vectors);
+    printf("%-14s - 0x%08x\n", "stack top",    (unsigned)stack_top);
+    printf("%-14s - 0x%08x\n", "reset",        (unsigned)reset_handler);
+    printf("%-14s - 0x%08x\n", "reset (even)", (unsigned)reset_handler_even);
+    printf("%-14s - 0x%08x\n", "gpio in",      (unsigned)(uintptr_t)gpio_in);
+    printf("%-14s - %u\n",     "led bit",      (unsigned)level);
+    printf("%-14s - %u\n",     "gpio_get",     (unsigned)gpio_get(led_pin()));
+}
