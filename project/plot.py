@@ -10,7 +10,7 @@ import sys
 import time
 
 # ---------- настройки ----------
-PORT = "COM7"        # твой порт; можно None для автопоиска
+PORT = "COM5"        # твой порт; можно None для автопоиска
 BAUD = 115200
 WINDOW_SECONDS = 5
 SLEEP_MS = 1
@@ -52,7 +52,7 @@ line, = ax.plot([], [], lw=1.0, color="#00a0ff")
 ax.set_xlabel("Время, с")
 ax.set_ylabel("Напряжение, В")
 ax.set_title("Напряжение с Raspberry Pi Pico (live)")
-ax.set_ylim(0, 3.3)
+ax.set_ylim(1, 2)
 ax.set_xlim(0, WINDOW_SECONDS)
 ax.grid(True, alpha=0.3)
 
