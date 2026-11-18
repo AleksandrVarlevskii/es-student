@@ -8,7 +8,6 @@ static uint32_t half_period_ms = 500; // милисекунды
 static uint64_t last_toggle_us = 0;
 
 
-static void led_task_blink(uint64_t * last_us, uint32_t half_period_ms);
 static void led_set_level(bool level);
 static bool led_get_level(void);
 
@@ -42,14 +41,6 @@ static bool period_elapsed(uint64_t *last_us, uint64_t period_us)
     return true;
 }
 
-static void led_task_blink(uint64_t * last_us, uint32_t half_period_ms)
-{
-
-    if (period_elapsed(last_us, half_period_ms*1000))
-    {
-        led_set_level(!led_get_level());
-    }
-}
 
 
 
@@ -95,7 +86,11 @@ void led_task_handle(void)
         case LED_STATE_ON:
         break;
         case LED_STATE_BLINK:
-        led_task_blink( &last_toggle_us, half_period_ms );
+        
+        if (period_elapsed(&last_toggle_us, half_period_ms*1000))
+        {
+        led_set_level(!led_get_level());
+        }
         break;
     }
 }
