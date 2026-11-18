@@ -11,6 +11,7 @@
 #include "api.h"
 #include "device.h"
 #include "profiling.h"
+#include "led-task.h"
 
 // Прототипы — до таблицы
 static void cmd_info(const command_t *command);
@@ -18,6 +19,11 @@ static void cmd_uptime(const command_t *command);
 static void cmd_calc_pi(const command_t *command);
 static void cmd_main_time_exec(const command_t *command);
 static void cmd_main_time_reset(const command_t *command);
+static void cmd_led_period(const command_t *command);
+static void cmd_led_enable(const command_t *command);
+static void cmd_led_disable(const command_t *command);
+static void cmd_led_blink(const command_t *command);
+
 
 const api_command_t api_commands[] = {
     { "info",            "device passport",                                   cmd_info            },
@@ -25,6 +31,12 @@ const api_command_t api_commands[] = {
     { "calc_pi",         "calculate pi: calc_pi [terms]",                     cmd_calc_pi         },
     { "main_time_exec",  "superloop iteration: average and maximum",          cmd_main_time_exec  },
     { "main_time_reset", "reset maximum iteration",                           cmd_main_time_reset },
+    
+    // LED
+    { "led_enable",      "turn LED on",                                       cmd_led_enable      },
+    { "led_disable",     "turn LED off",                                      cmd_led_disable     },
+    { "led_blink",       "start blinking",                                    cmd_led_blink       },
+    { "led_period",      "set blink period: led_period [ms]",                 cmd_led_period      },
 };
 
 static const uint32_t api_command_count = sizeof(api_commands) / sizeof(api_commands[0]);
@@ -151,4 +163,47 @@ static void cmd_main_time_reset(const command_t *command)
     (void)command;
     profiling_reset_max();
     printf("max reset\r\n");
+}
+
+
+static void cmd_led_period(const command_t *command)
+{
+    uint32_t period_ms;
+
+    if (command->argc != 1 || !parse_u32(command->argv[0], &period_ms))
+    {
+        printf("error: usage led_period <period_ms>\n");
+        return;
+    }
+
+    // годится ли такой период, решает задача светодиода
+    if (!led_task_set_period_ms(period_ms))
+    {
+        printf("error: period_ms must be greater than 0\n");
+        return;
+    }
+
+    // ответ: состояние и период светодиода
+    print_led_state();
+}
+
+static void cmd_led_enable(const command_t *command)
+{
+    led_task_set_state(LED_STATE_ON);
+    // ответ: состояние и период светодиода
+    print_led_state();
+}
+
+static void cmd_led_disable(const command_t *command)
+{
+    led_task_set_state(LED_STATE_OFF);
+    // ответ: состояние и период светодиода
+    print_led_state();
+}
+
+static void cmd_led_blink(const command_t *command)
+{
+    led_task_set_state(LED_STATE_BLINK);
+    // ответ: состояние и период светодиода
+    print_led_state();
 }

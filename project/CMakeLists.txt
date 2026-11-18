@@ -23,6 +23,7 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
 	pico_stdlib
 	hardware_adc
+ 	hardware_pwm 
 )
 
 # Указываем файл, в котором находится линкер скрипт - специфика сборки под МК
