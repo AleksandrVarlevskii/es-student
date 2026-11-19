@@ -14,8 +14,6 @@ void button_task_handle(void); // обработчик задачи кнопка
 void button_task_init(void); // инициилизация задачи кнопка
 
 
-void print_button_state(void); // печатает состояние кнопки и количество нажатий
-
-bool button_task_is_pressed(void);
-uint32_t button_task_get_press_count(void);
-const char* get_button_statename(void);
+bool button_task_is_pressed(void); // нигде не используется, нужно только для по требованию задания
+uint32_t button_task_get_press_count(void); // возращает количество нажатий кнопки
+const char* get_button_statename(void); // возращает название состояния кнопки на английском языке: pressed, released, pressed (debounce), released (debounce)

@@ -13,11 +13,11 @@
 #include "profiling.h"
 #include "led-task.h"
 #include "button-task.h"
+#include "pi-task.h"
 
 // Прототипы — до таблицы
 static void cmd_info(const command_t *command);
 static void cmd_uptime(const command_t *command);
-static void cmd_calc_pi(const command_t *command);
 static void cmd_main_time_exec(const command_t *command);
 static void cmd_main_time_reset(const command_t *command);
 static void cmd_led_period(const command_t *command);
@@ -25,12 +25,13 @@ static void cmd_led_enable(const command_t *command);
 static void cmd_led_disable(const command_t *command);
 static void cmd_led_blink(const command_t *command);
 static void cmd_button(const command_t *command);
+static void cmd_pi_start(const command_t *command);
+static void cmd_pi(const command_t *command);
 
 
 const api_command_t api_commands[] = {
     { "info",            "device passport",                                   cmd_info            },
     { "uptime",          "time since reset",                                  cmd_uptime          },
-    { "calc_pi",         "calculate pi: calc_pi [terms]",                     cmd_calc_pi         },
     { "main_time_exec",  "superloop iteration: average and maximum",          cmd_main_time_exec  },
     { "main_time_reset", "reset maximum iteration",                           cmd_main_time_reset },
     
@@ -41,6 +42,9 @@ const api_command_t api_commands[] = {
     { "led_period",      "set blink period: led_period [ms]",                 cmd_led_period      },
     // BUTTON
     { "button",          "get button click count and reset: button",          cmd_button          },
+    // PI
+    { "pi_start",        "starts the calculation of pi and responds immediately, without waiting for the result.",   cmd_pi_start        },
+    { "pi",       "displays the result of the last calculation or the calculation status if there is no result.",           cmd_pi       },
 };
 
 static const uint32_t api_command_count = sizeof(api_commands) / sizeof(api_commands[0]);
@@ -111,55 +115,13 @@ static void cmd_uptime(const command_t *command)
     printf("uptime: %llu ms\r\n", (unsigned long long)ms);
 }
 
-#define CALC_PI_DEFAULT_TERMS 1000000u
-
-static double calc_pi(uint32_t terms)
-{
-    double sum  = 0.0;
-    double sign = 1.0;
-
-    for (uint32_t k = 0; k < terms; k++) {
-        sum += sign / (2.0 * (double)k + 1.0);
-        sign = -sign;
-    }
-
-    return 4.0 * sum;
-}
-
-static void cmd_calc_pi(const command_t *command)
-{
-    uint32_t terms = CALC_PI_DEFAULT_TERMS;
-
-    if (command->argc > 1) {
-        printf("error: usage calc_pi [terms]\r\n");
-        return;
-    }
-
-    if (command->argc == 1) {
-        if (!parse_u32(command->argv[0], &terms)) {
-            printf("error: usage calc_pi [terms]\r\n");
-            return;
-        }
-        if (terms == 0) {
-            printf("error: terms must be greater than 0\r\n");
-            return;
-        }
-    }
-
-    uint64_t start_us = time_us_64();
-    double   pi       = calc_pi(terms);
-    uint64_t spent_us = time_us_64() - start_us;
-
-    printf("pi: %.9f\r\n", pi);
-    printf("time: %llu ms\r\n", (unsigned long long)(spent_us / 1000));
-}
 
 static void cmd_main_time_exec(const command_t *command)
 {
     (void)command;
     printf("iteration avg %.2f us, max %u us\r\n",
-           profiling_avg_us(),
-           (unsigned)profiling_max_us());
+        profiling_avg_us(),
+        (unsigned)profiling_max_us());
 }
 
 static void cmd_main_time_reset(const command_t *command)
@@ -168,6 +130,10 @@ static void cmd_main_time_reset(const command_t *command)
     profiling_reset_max();
     printf("max reset\r\n");
 }
+
+
+
+// LED
 
 
 static void cmd_led_period(const command_t *command)
@@ -212,9 +178,55 @@ static void cmd_led_blink(const command_t *command)
     print_led_state();
 }
 
+
+
+// BUTTON
 static void cmd_button(const command_t *command)
 {
     (void)command; // пояняем компилятору, что мы не используем аргументы команды
     printf("button: %s, presses %u\r\n", get_button_statename(), (unsigned)button_task_get_press_count());
     
+}
+
+// PI
+static void cmd_pi_start(const command_t *command){
+
+    uint32_t terms;
+
+    if (command->argc != 1 || !parse_u32(command->argv[0], &terms))
+    {
+        printf("error: usage pi_start <terms>\n");
+        return;
+    } else if (terms == 0) {
+        printf("error: terms must be greater than 0 — <terms>\n");
+        return;
+    } else if (pi_task_get_state() == PI_TASK_STATE_RUNNING) {
+        printf("error: pi is busy\n");
+        return;
+    }else if (!pi_task_start(terms)) {
+        printf("error: pi calculation is already running\n");
+        return;
+    }
+}
+
+
+
+
+
+
+
+static void cmd_pi(const command_t *command){
+    (void)command;
+    pi_task_state_t state = pi_task_get_state();
+    if (state == PI_TASK_STATE_IDLE){
+        printf("error: pi: not started\n");
+    }else if (state == PI_TASK_STATE_RUNNING){
+        printf("pi: running\n");
+    }else if (state == PI_TASK_STATE_READY){
+        double result;
+        uint64_t time_us;
+        pi_task_get_result(&result, &time_us);
+        printf("pi: %.10f in %llu ms\r\n", result, (unsigned long long)(time_us/1000)); // convert to milliseconds
+    }
+
 }

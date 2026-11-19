@@ -29,10 +29,7 @@ const char* get_button_statename(void)
     }
 }
 
-void print_button_state(void)
-{  
-printf("button: %s, presses %u\r\n", get_button_statename(), (unsigned)click_counter);
-}
+
 
 bool button_task_is_pressed(){
     return button_state == BUTTON_STATE_PRESSED ;
@@ -67,13 +64,13 @@ void button_task_handle(void)
         case BUTTON_STATE_PRESSED:
             if (level == true){ // кнопка отжата
                 button_state = BUTTON_STATE_RELEASED_DEBOUNCE;
-                last_toggle_us = now_us; // сбрасываем счетчик времени.
+                last_toggle_us = now_us; 
             }
             break;
         case BUTTON_STATE_RELEASED:
             if (level == false){ // кнопка нажата
                 button_state = BUTTON_STATE_PRESSED_DEBOUNCE;
-                last_toggle_us = now_us; // сбрасываем счетчик времени.
+                last_toggle_us = now_us;
             }
             break;
         case BUTTON_STATE_RELEASED_DEBOUNCE:
@@ -83,7 +80,7 @@ void button_task_handle(void)
             }
             if (level == false){
                 button_state = BUTTON_STATE_PRESSED_DEBOUNCE;
-                last_toggle_us = now_us; // сбрасываем счетчик времени.
+                last_toggle_us = now_us; 
             }
             break;
         case BUTTON_STATE_PRESSED_DEBOUNCE:
@@ -94,7 +91,7 @@ void button_task_handle(void)
             }
             if (level == true){
                 button_state = BUTTON_STATE_RELEASED_DEBOUNCE;
-                last_toggle_us = now_us; // сбрасываем счетчик времени.
+                last_toggle_us = now_us; 
             }
             break;
     }

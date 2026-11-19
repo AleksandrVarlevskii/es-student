@@ -12,6 +12,7 @@
 #include "api.h"
 #include "stdio-text-protocol.h"
 #include "button-task.h"
+#include "pi-task.h"
 
 
 
@@ -29,6 +30,7 @@ int main(){
     button_task_init();
     profiling_init();
     stdio_text_protocol_init();
+    pi_task_init();
 
     
 
@@ -37,6 +39,7 @@ int main(){
         profiling_iteration();
         led_task_handle();
         button_task_handle();
+        pi_task_handle();
         const command_t *command = stdio_text_protocol_handle();
         if (command != NULL)
         {
