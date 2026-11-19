@@ -215,6 +215,6 @@ static void cmd_led_blink(const command_t *command)
 static void cmd_button(const command_t *command)
 {
     (void)command; // пояняем компилятору, что мы не используем аргументы команды
-    print_button_state();
+    printf("button: %s, presses %u\r\n", get_button_statename(), (unsigned)button_task_get_press_count());
     
 }

@@ -15,3 +15,7 @@ void button_task_init(void); // инициилизация задачи кноп
 
 
 void print_button_state(void); // печатает состояние кнопки и количество нажатий
+
+bool button_task_is_pressed(void);
+uint32_t button_task_get_press_count(void);
+const char* get_button_statename(void);

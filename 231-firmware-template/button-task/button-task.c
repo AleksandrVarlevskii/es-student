@@ -12,7 +12,7 @@ button_state_t button_state;
 
 
 
-static const char* get_button_statename(void)
+const char* get_button_statename(void)
 {
     switch (button_state)
     {
@@ -34,7 +34,12 @@ void print_button_state(void)
 printf("button: %s, presses %u\r\n", get_button_statename(), (unsigned)click_counter);
 }
 
-
+bool button_task_is_pressed(){
+    return button_state == BUTTON_STATE_PRESSED ;
+}
+uint32_t button_task_get_press_count(void){
+    return click_counter;
+}
 
 
 
