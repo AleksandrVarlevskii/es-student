@@ -12,6 +12,7 @@
 #include "device.h"
 #include "profiling.h"
 #include "led-task.h"
+#include "button-task.h"
 
 // Прототипы — до таблицы
 static void cmd_info(const command_t *command);
@@ -23,6 +24,7 @@ static void cmd_led_period(const command_t *command);
 static void cmd_led_enable(const command_t *command);
 static void cmd_led_disable(const command_t *command);
 static void cmd_led_blink(const command_t *command);
+static void cmd_button(const command_t *command);
 
 
 const api_command_t api_commands[] = {
@@ -37,6 +39,8 @@ const api_command_t api_commands[] = {
     { "led_disable",     "turn LED off",                                      cmd_led_disable     },
     { "led_blink",       "start blinking",                                    cmd_led_blink       },
     { "led_period",      "set blink period: led_period [ms]",                 cmd_led_period      },
+    // BUTTON
+    { "button",          "get button click count and reset: button",          cmd_button          },
 };
 
 static const uint32_t api_command_count = sizeof(api_commands) / sizeof(api_commands[0]);
@@ -206,4 +210,11 @@ static void cmd_led_blink(const command_t *command)
     led_task_set_state(LED_STATE_BLINK);
     // ответ: состояние и период светодиода
     print_led_state();
+}
+
+static void cmd_button(const command_t *command)
+{
+    (void)command; // пояняем компилятору, что мы не используем аргументы команды
+    print_button_state();
+    
 }

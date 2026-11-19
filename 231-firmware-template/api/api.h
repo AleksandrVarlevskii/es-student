@@ -1,3 +1,4 @@
+#pragma once
 #include "stdio-text-protocol.h"
 
 
