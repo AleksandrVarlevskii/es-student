@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "pico/types.h"
 
 // Число секундомеров (номера 0..PROFILING_MAX_STOPWATCHES-1). Должно соотвествовать числу секундомеров объявленых в мейне
 #ifndef PROFILING_MAX_STOPWATCHES

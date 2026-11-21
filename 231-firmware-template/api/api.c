@@ -227,7 +227,7 @@ static void cmd_pi(const command_t *command){
 }
 
 // PROFILING
-#ifndef PROFILING_ENABLED
+#if PROFILING_ENABLED
 static void cmd_profiling(const command_t *command)
 {
     (void)command;
@@ -252,7 +252,7 @@ static void cmd_profiling(const command_t *command)
 #else
 static void cmd_profiling(const command_t *command){
     (void)command;
-    printf("profiling is disabled in this build");
+    printf("profiling is disabled in this build\n");
 }
 #endif
 

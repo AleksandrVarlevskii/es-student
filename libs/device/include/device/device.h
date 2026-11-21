@@ -1,13 +1,14 @@
 #pragma once
 
 #include <stdint.h>
-#include "pico/unique_id.h"
+
 
 #ifndef DEVICE_BOARD
 #define DEVICE_BOARD "unknown"
 #endif
 // Размер строки для уникального ID платы (8 байт ID -> 16 hex-символов + '\0')
-#define BOARD_ID_STR_LEN 2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1
+// при подлкючении pico/unique_id.h это 17 может быть вычислина  2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1
+#define BOARD_ID_STR_LEN 17 
 
 typedef struct {
     const char *board;              // тип платы (DEVICE_BOARD)
