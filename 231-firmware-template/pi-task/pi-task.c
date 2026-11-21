@@ -1,5 +1,7 @@
+
 #include "pi-task.h"
-#include "log.h"
+#include "logging/log.h"
+#include "systime/systime.h"
 
 
 #define PI_TERMS_PER_CALL 100 // количество членов ряда, которые вычисляются за один вызов обработчика задачи. 
@@ -33,7 +35,7 @@ bool pi_task_start(uint32_t n)
     pi_sum = 0.0;
     pi_sign = 1.0;
     pi_state = PI_TASK_STATE_RUNNING;
-    pi_start_time_us = time_us_64();
+    pi_start_time_us = systime_us();
     return true;
 }
 
@@ -56,7 +58,7 @@ void pi_task_handle(void)
     if (pi_k == pi_n) {
         pi_result = 4.0 * pi_sum;
         pi_state = PI_TASK_STATE_READY;
-        pi_end_time_us = time_us_64();
+        pi_end_time_us = systime_us();
     }
 }
 

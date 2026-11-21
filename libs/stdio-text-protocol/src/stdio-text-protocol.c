@@ -1,6 +1,6 @@
-#include "stdio-text-protocol.h"
+#include "stdio-text-protocol/stdio-text-protocol.h"
 #include "pico/stdlib.h"
-#include "log.h"
+#include "logging/log.h"
 
 
 

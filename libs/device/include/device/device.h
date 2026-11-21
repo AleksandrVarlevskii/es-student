@@ -3,11 +3,6 @@
 #include <stdint.h>
 #include "pico/unique_id.h"
 
-#define DEVICE_NAME "pico"
-#define FIRMWARE_VERSION "1.2.0"
-
-#define DEVICE_PROJECT "231-firmware-template"
-#define DEVICE_REPO "https://github.com/AleksandrVarlevskii/es-student"
 #ifndef DEVICE_BOARD
 #define DEVICE_BOARD "unknown"
 #endif
@@ -15,10 +10,6 @@
 #define BOARD_ID_STR_LEN 2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1
 
 typedef struct {
-    const char *name;               // имя устройства (DEVICE_NAME)
-    const char *version;            // версия прошивки (FIRMWARE_VERSION)
-    const char *project;            // проект (DEVICE_PROJECT)
-    const char *repo;               // репозиторий (DEVICE_REPO)
     const char *board;              // тип платы (DEVICE_BOARD)
     char        serial[BOARD_ID_STR_LEN]; // серийный номер (hex-строка)
     uint32_t    chip_manufacturer;  // производитель кристалла

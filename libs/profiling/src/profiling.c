@@ -1,9 +1,13 @@
-#include "pico/stdlib.h"
-
-#include "profiling.h"
 #include <stdbool.h>
 #include <stddef.h>
-#include "log.h"
+#include <stdio.h>
+
+#include "pico/time.h"
+
+#include "logging/log.h"
+#include "profiling/profiling.h"
+#include "systime/systime.h"
+
 
 typedef struct {
     const char *name;       // NULL — секундомер не заведён
@@ -39,6 +43,7 @@ void profiling_stopwatch_init(uint32_t id, const char *name)
     sw->running  = false;
 }
 
+
 void profiling_start(uint32_t id)
 {
     if (id >= PROFILING_MAX_STOPWATCHES){
@@ -60,7 +65,7 @@ void profiling_start(uint32_t id)
                 (unsigned)id, sw->name);
         return;
     }
-    sw->start_us = time_us_32();
+    sw->start_us = (uint32_t)systime_us();
     sw->running  = true;
 }
 
@@ -86,7 +91,7 @@ void profiling_stop(uint32_t id)
         return;
     }
 
-    uint32_t now = time_us_32();
+    uint32_t now = (uint32_t)systime_us();
     uint32_t dt  = now - sw->start_us; // беззнаковая разность корректна и при переполнении time_us_32
 
     sw->running = false;
@@ -94,6 +99,8 @@ void profiling_stop(uint32_t id)
     sw->sum_us += dt;                  // 32-битная сумма, переполнение ~71 мин
     if (dt > sw->max_us) sw->max_us = dt;
 }
+
+
 
 bool profiling_get(uint32_t id, profiling_result_t *result)
 {
@@ -136,8 +143,11 @@ void profiling_reset(void)
         stopwatch_t *sw = &s_stopwatches[i];
         sw->count    = 0;
         sw->sum_us   = 0;
-        sw->start_us = 0;
         sw->max_us   = 0;
         // name сохраняется — секундомер остаётся заведённым
+        // running не сбрасываем иначе будет ошибка с profiling_stop: stopwatch %u ('%s') is not running. 
+        /* start_us не сбрасывем иначе в profiling_stop будет now-0, что сломает все статистику, 
+        при этом сбрасывать и не надо т.к. беззнаковая разность корректна и при переполнении time_us_32.
+        Проблема может возникнуть только если переполнение случится более одного раза, но это означало бы что одна итерация цикла заняла больше 70 минут.*/
     }
 }

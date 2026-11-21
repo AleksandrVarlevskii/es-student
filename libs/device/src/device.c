@@ -1,4 +1,4 @@
-#include "device.h"
+
 
 #include <stddef.h>
 #include <stdio.h>
@@ -6,7 +6,9 @@
 #include "hardware/regs/addressmap.h"
 #include "hardware/regs/sysinfo.h"
 #include "pico/version.h"
-#include "log.h"
+
+#include "device/device.h"
+#include "logging/log.h"
 
 
 
@@ -18,10 +20,6 @@ void device_get_info(device_info_t *info) {
     }
 
     // 1. Константы прошивки
-    info->name    = DEVICE_NAME;
-    info->version = FIRMWARE_VERSION;
-    info->project = DEVICE_PROJECT;
-    info->repo    = DEVICE_REPO;
     info->board   = DEVICE_BOARD;
 
     // 2. Серийный номер

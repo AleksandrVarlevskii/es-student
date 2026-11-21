@@ -1,13 +1,33 @@
 #pragma once
 
-#include "pico/types.h"
+
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "pico/types.h"
 
 // Число секундомеров (номера 0..PROFILING_MAX_STOPWATCHES-1). Должно соотвествовать числу секундомеров объявленых в мейне
 #ifndef PROFILING_MAX_STOPWATCHES
 #define PROFILING_MAX_STOPWATCHES 5
 #endif
+
+// по умолчанию профилирование включено
+#ifndef PROFILING_ENABLED
+#define PROFILING_ENABLED 1
+#endif
+
+#if PROFILING_ENABLED
+void profiling_start(uint32_t id);
+void profiling_stop(uint32_t id);
+#else
+// профилирование выключено: вызовы ничего не делают
+
+#define profiling_start(id) ((void)0)
+#define profiling_stop(id) ((void)0)
+#endif
+
+
+
 
 // Результат замера одного секундомера.
 //
@@ -24,8 +44,7 @@ typedef struct {
 
 void profiling_stopwatch_init(uint32_t id, const char *name); //функция инициилизации 
 
-void profiling_start(uint32_t id); // начинаем профилирование
-void profiling_stop(uint32_t id); // заканчиваем профилирование
+
 
 // false — секундомер с таким номером не заведён
 bool profiling_get(uint32_t id, profiling_result_t *result); // получаем результаты профизирования
