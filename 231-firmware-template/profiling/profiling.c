@@ -1,49 +1,143 @@
 #include "pico/stdlib.h"
 
 #include "profiling.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include "log.h"
 
+typedef struct {
+    const char *name;       // NULL — секундомер не заведён
+    uint32_t    count;      // число замеров
+    uint32_t    sum_us;     // сумма замеров (32 бита, см. комментарий в profiling.h)
+    uint32_t    start_us;   // момент старта
+    uint32_t    max_us;     // максимум
+    bool        running;    // защита от повторного старта
+} stopwatch_t;
 
-static uint32_t previous_us = 0;
-static uint32_t max_us = 0;
+static stopwatch_t s_stopwatches[PROFILING_MAX_STOPWATCHES];
 
-
-
-// итерация около 2 мкс, за секунду их около 500 000;
-// ближайшая степень двойки 2^19 = 524 288, среднее помнит около секунды
-#define AVG_SHIFT 19
-// замер в 1/256 долях микросекунды, чтобы среднее не теряло дробную часть
-
-#define FRACTION_SHIFT 8
-static uint64_t avg_sum = 0;
-
-void profiling_init(void)
+void profiling_stopwatch_init(uint32_t id, const char *name)
 {
-    previous_us = time_us_32();
+    if (id >= PROFILING_MAX_STOPWATCHES){
+        LOG_ERR("profiling_stopwatch_init: id %u is out of range (max %u). "
+                "Increase PROFILING_MAX_STOPWATCHES in profiling.h if more stopwatches are needed.",
+                (unsigned)id, (unsigned)PROFILING_MAX_STOPWATCHES);
+        return;
+    }
+    if (name == NULL){
+        LOG_ERR("profiling_stopwatch_init: name is NULL for id %u. "
+                "A stopwatch must have a non-NULL name to be registered.",
+                (unsigned)id);
+        return;
+    }
+    stopwatch_t *sw = &s_stopwatches[id];
+    sw->name     = name;
+    sw->count    = 0;
+    sw->sum_us   = 0;
+    sw->start_us = 0;
+    sw->max_us   = 0;
+    sw->running  = false;
 }
 
-void profiling_iteration(void)
+void profiling_start(uint32_t id)
 {
-    uint32_t now_us = time_us_32();
-    uint32_t iteration_us = now_us - previous_us;
-    previous_us = now_us;
+    if (id >= PROFILING_MAX_STOPWATCHES){
+        LOG_ERR("profiling_start: id %u is out of range (max %u). "
+                "Increase PROFILING_MAX_STOPWATCHES in profiling.h if more stopwatches are needed.",
+                (unsigned)id, (unsigned)PROFILING_MAX_STOPWATCHES);
+        return;
+    }
+    stopwatch_t *sw = &s_stopwatches[id];
+    if (sw->name == NULL){
+        LOG_ERR("profiling_start: stopwatch %u is not registered. "
+                "Call profiling_stopwatch_init() for it before starting.",
+                (unsigned)id);
+        return;
+    }
+    if (sw->running){
+        LOG_ERR("profiling_start: stopwatch %u ('%s') is already running. "
+                "Call profiling_stop() before starting it again.",
+                (unsigned)id, sw->name);
+        return;
+    }
+    sw->start_us = time_us_32();
+    sw->running  = true;
+}
 
-    if (iteration_us > max_us)
-    {
-        max_us = iteration_us;
+void profiling_stop(uint32_t id)
+{
+    if (id >= PROFILING_MAX_STOPWATCHES){
+        LOG_ERR("profiling_stop: id %u is out of range (max %u). "
+                "Increase PROFILING_MAX_STOPWATCHES in profiling.h if more stopwatches are needed.",
+                (unsigned)id, (unsigned)PROFILING_MAX_STOPWATCHES);
+        return;
+    }
+    stopwatch_t *sw = &s_stopwatches[id];
+    if (sw->name == NULL){
+        LOG_ERR("profiling_stop: stopwatch %u is not registered. "
+                "Call profiling_stopwatch_init() for it before using it.",
+                (unsigned)id);
+        return;
+    }
+    if (!sw->running){
+        LOG_ERR("profiling_stop: stopwatch %u ('%s') is not running. "
+                "Call profiling_start() before profiling_stop().",
+                (unsigned)id, sw->name);
+        return;
     }
 
-    avg_sum = avg_sum - (avg_sum >> AVG_SHIFT) + ((uint64_t)iteration_us << FRACTION_SHIFT);
+    uint32_t now = time_us_32();
+    uint32_t dt  = now - sw->start_us; // беззнаковая разность корректна и при переполнении time_us_32
+
+    sw->running = false;
+    sw->count++;
+    sw->sum_us += dt;                  // 32-битная сумма, переполнение ~71 мин
+    if (dt > sw->max_us) sw->max_us = dt;
 }
 
-float profiling_avg_us(void)
+bool profiling_get(uint32_t id, profiling_result_t *result)
 {
-    return (float)(avg_sum >> AVG_SHIFT) / (1 << FRACTION_SHIFT);
+    if (id >= PROFILING_MAX_STOPWATCHES){
+        LOG_ERR("profiling_get: id %u is out of range (max %u). "
+                "Increase PROFILING_MAX_STOPWATCHES in profiling.h if more stopwatches are needed.",
+                (unsigned)id, (unsigned)PROFILING_MAX_STOPWATCHES);
+        return false;
+    }
+    if (result == NULL){
+        LOG_ERR("profiling_get: result pointer is NULL for id %u. "
+                "Pass a valid profiling_result_t* to receive the data.",
+                (unsigned)id);
+        return false;
+    }
+    const stopwatch_t *sw = &s_stopwatches[id];
+    if (sw->name == NULL){
+        LOG_ERR("profiling_get: stopwatch %u is not registered. "
+                "Call profiling_stopwatch_init() for it before reading.",
+                (unsigned)id);
+        return false;
+    }
+
+    result->name                = sw->name;
+    result->number_measurements = sw->count;
+    result->mean                = (sw->count > 0)
+                                    ? (uint64_t)sw->sum_us / sw->count
+                                    : 0;
+    result->max                 = sw->max_us;
+    result->sum_us                = sw->sum_us;
+    return true;
 }
 
-uint32_t profiling_max_us(void){
-    return max_us;
-}
-
-void profiling_reset_max(void){
-    max_us=0;
+void profiling_reset(void)
+{
+    // Ошибок быть не может: проходим по всему массиву,
+    // у незаведённых секундомеров name == NULL и обнуление полей безвредно.
+    for (uint32_t i = 0; i < PROFILING_MAX_STOPWATCHES; i++)
+    {
+        stopwatch_t *sw = &s_stopwatches[i];
+        sw->count    = 0;
+        sw->sum_us   = 0;
+        sw->start_us = 0;
+        sw->max_us   = 0;
+        // name сохраняется — секундомер остаётся заведённым
+    }
 }

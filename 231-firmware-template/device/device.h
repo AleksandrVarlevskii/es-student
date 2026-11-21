@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "pico/unique_id.h"
 
 #define DEVICE_NAME "pico"
 #define FIRMWARE_VERSION "1.2.0"
@@ -10,23 +11,30 @@
 #ifndef DEVICE_BOARD
 #define DEVICE_BOARD "unknown"
 #endif
+// Размер строки для уникального ID платы (8 байт ID -> 16 hex-символов + '\0')
+#define BOARD_ID_STR_LEN 2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1
 
-struct info_t
-{
-    uint32_t version;
-    char name[13];
-    uint8_t revision;
-    
-   
-};
+typedef struct {
+    const char *name;               // имя устройства (DEVICE_NAME)
+    const char *version;            // версия прошивки (FIRMWARE_VERSION)
+    const char *project;            // проект (DEVICE_PROJECT)
+    const char *repo;               // репозиторий (DEVICE_REPO)
+    const char *board;              // тип платы (DEVICE_BOARD)
+    char        serial[BOARD_ID_STR_LEN]; // серийный номер (hex-строка)
+    uint32_t    chip_manufacturer;  // производитель кристалла
+    uint32_t    chip_part;          // изделие (part)
+    uint32_t    chip_revision;      // ревизия кристалла
+    const char *sdk_version;        // версия SDK
+} device_info_t;
+
+// Заполняет структуру по указателю
+void device_get_info(device_info_t *info);
 
 extern struct info_t device_card;
 
 
-// Размер строки для уникального ID платы (8 байт ID -> 16 hex-символов + '\0')
-#define BOARD_ID_STR_LEN 2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1
 
-void dev_info(void);
+
 
 void device_info(void);
 

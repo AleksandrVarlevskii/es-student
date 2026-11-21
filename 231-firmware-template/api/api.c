@@ -18,8 +18,6 @@
 // Прототипы — до таблицы
 static void cmd_info(const command_t *command);
 static void cmd_uptime(const command_t *command);
-static void cmd_main_time_exec(const command_t *command);
-static void cmd_main_time_reset(const command_t *command);
 static void cmd_led_period(const command_t *command);
 static void cmd_led_enable(const command_t *command);
 static void cmd_led_disable(const command_t *command);
@@ -27,13 +25,13 @@ static void cmd_led_blink(const command_t *command);
 static void cmd_button(const command_t *command);
 static void cmd_pi_start(const command_t *command);
 static void cmd_pi(const command_t *command);
+static void cmd_profiling(const command_t *command);
+static void cmd_profiling_reset(const command_t *command);
 
 
 const api_command_t api_commands[] = {
     { "info",            "device passport",                                   cmd_info            },
     { "uptime",          "time since reset",                                  cmd_uptime          },
-    { "main_time_exec",  "superloop iteration: average and maximum",          cmd_main_time_exec  },
-    { "main_time_reset", "reset maximum iteration",                           cmd_main_time_reset },
     
     // LED
     { "led_enable",      "turn LED on",                                       cmd_led_enable      },
@@ -45,6 +43,9 @@ const api_command_t api_commands[] = {
     // PI
     { "pi_start",        "starts the calculation of pi and responds immediately, without waiting for the result.",   cmd_pi_start        },
     { "pi",       "displays the result of the last calculation or the calculation status if there is no result.",           cmd_pi       },
+    //PROFILING
+    { "profiling",       "print all stopwatches since reset",              cmd_profiling       },
+    { "profiling_reset", "reset all stopwatches",                          cmd_profiling_reset },
 };
 
 static const uint32_t api_command_count = sizeof(api_commands) / sizeof(api_commands[0]);
@@ -114,23 +115,6 @@ static void cmd_uptime(const command_t *command)
     uint64_t ms = time_us_64() / 1000;
     printf("uptime: %llu ms\r\n", (unsigned long long)ms);
 }
-
-
-static void cmd_main_time_exec(const command_t *command)
-{
-    (void)command;
-    printf("iteration avg %.2f us, max %u us\r\n",
-        profiling_avg_us(),
-        (unsigned)profiling_max_us());
-}
-
-static void cmd_main_time_reset(const command_t *command)
-{
-    (void)command;
-    profiling_reset_max();
-    printf("max reset\r\n");
-}
-
 
 
 // LED
@@ -229,4 +213,33 @@ static void cmd_pi(const command_t *command){
         printf("pi: %.10f in %llu ms\r\n", result, (unsigned long long)(time_us/1000)); // convert to milliseconds
     }
 
+}
+
+// PROFILING
+static void cmd_profiling(const command_t *command)
+{
+    (void)command;
+    profiling_result_t r;
+    for (uint32_t id = 0; id < PROFILING_MAX_STOPWATCHES; id++) {
+        if (!profiling_get(id, &r)) continue;
+
+        // mean в profiling_result_t — целые микросекунды;
+        // сотые доли считаем для печати из суммы и числа замеров
+        uint32_t mean_centi = (r.number_measurements > 0)
+            ? (uint32_t)(((uint64_t)r.sum_us * 100) / r.number_measurements)
+            : 0;
+
+        printf("%-10s count %-10u mean %u.%02u us  max %llu us\r\n",
+               r.name,
+               (unsigned)r.number_measurements,
+               (unsigned)(mean_centi / 100),
+               (unsigned)(mean_centi % 100),
+               (unsigned long long)r.max);
+    }
+}
+
+static void cmd_profiling_reset(const command_t *command)
+{
+    (void)command;
+    profiling_reset();
 }

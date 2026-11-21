@@ -5,11 +5,17 @@ static const uint BUTTON_PIN = 15; // пин кнопки
 static const uint64_t BUTTON_DEBOUNCE_TIME = 20000; // порог времени, для защиты от времени (сколько сигнал должен продержаться что бы он был засчитан как нажатие кнопки) 
 static uint64_t last_toggle_us = 0;
 static uint32_t click_counter = 0; // счетчик нажатий
-button_state_t button_state;  
+ 
 
 
+typedef enum {
+    BUTTON_STATE_PRESSED, // нажата
+    BUTTON_STATE_PRESSED_DEBOUNCE, // нажата? (ждем, что бы проверить не дребезг ли )
+    BUTTON_STATE_RELEASED, // отжата
+    BUTTON_STATE_RELEASED_DEBOUNCE, //отжата? (ждем, что бы проверить не дребезг ли )
+} button_state_t;
 
-
+button_state_t button_state; 
 
 
 const char* get_button_statename(void)
