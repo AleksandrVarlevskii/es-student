@@ -81,14 +81,14 @@ static void cmd_info(const command_t *command)
     (void)command;
     device_info_t info;
     device_get_info(&info);
-    printf("name: %s\n", FIRMWARE_NAME);
-    printf("version: %s\n", FIRMWARE_VERSION);
-    printf("project: %s\n", FIRMWARE_PROJECT);
-    printf("repo: %s\n", FIRMWARE_REPO);
-    printf("board: %s\n", info.board);
-    printf("serial: %s\n", info.serial);
-    printf("chip: manufacturer 0x%03x, part 0x%04x, revision %u\n", (unsigned)info.chip_manufacturer, (unsigned)info.chip_part, (unsigned)info.chip_revision);
-    printf("pico-sdk: %s\n", info.sdk_version);
+    printf("name: %s\r\n", FIRMWARE_NAME);
+    printf("version: %s\r\n", FIRMWARE_VERSION);
+    printf("project: %s\r\n", FIRMWARE_PROJECT);
+    printf("repo: %s\r\n", FIRMWARE_REPO);
+    printf("board: %s\r\n", info.board);
+    printf("serial: %s\r\n", info.serial);
+    printf("chip: manufacturer 0x%03x, part 0x%04x, revision %u\r\n", (unsigned)info.chip_manufacturer, (unsigned)info.chip_part, (unsigned)info.chip_revision);
+    printf("pico-sdk: %s\r\n", info.sdk_version);
 }
 
 static void cmd_uptime(const command_t *command)
@@ -124,14 +124,14 @@ static void cmd_led_period(const command_t *command)
 
     if (command->argc != 1 || !parse_u32(command->argv[0], &period_ms))
     {
-        printf("error: usage led_period <period_ms>\n");
+        printf("error: usage led_period <period_ms>\r\n");
         return;
     }
 
     // годится ли такой период, решает задача светодиода
     if (!led_task_set_period_ms(period_ms))
     {
-        printf("error: period_ms must be greater than 0\n");
+        printf("error: period_ms must be greater than 0\r\n");
         return;
     }
 
@@ -177,22 +177,42 @@ static void cmd_button(const command_t *command)
 
 static void cmd_pi_start(const command_t *command){
 
-    uint32_t terms = 10000;
+        // Значение по умолчанию
+    uint32_t terms = 1000000;
 
-    if (command->argc != 1 || !parse_u32(command->argv[0], &terms))
-    {
-        printf("error: usage pi_start [<terms>]\n");
+    // 1. Слишком много аргументов?
+    if (command->argc > 1) {
+        printf("error: usage pi_start [<terms>]\r\n");
         return;
-    } else if (terms == 0) {
-        printf("error: terms must be greater than 0\n");
+    }
+
+    // 2. Аргумент есть? Тогда пробуем его распарсить
+    if (command->argc == 1) {
+        if (!parse_u32(command->argv[0], &terms)) {
+            printf("error: invalid number for terms\r\n");
+            return;
+        }
+        if (terms == 0) {
+            printf("error: terms must be greater than 0\r\n");
+            return;
+        }
+    }
+    
+    // Если argc == 0, мы просто пропускаем этот блок и используем terms = 1000000
+
+    // 3. Проверяем состояние задачи
+    if (pi_task_get_state() == PI_TASK_STATE_RUNNING) {
+        printf("error: pi is busy\r\n");
         return;
-    } else if (pi_task_get_state() == PI_TASK_STATE_RUNNING) {
-        printf("error: pi is busy\n");
+    }
+
+    // 4. Запускаем расчет
+    if (!pi_task_start(terms)) {
+        printf("error: pi calculation failed to start\r\n");
         return;
-    }else if (!pi_task_start(terms)) {
-        printf("error: pi calculation is already running\n");
-        return;
-    } else{ printf("pi: started, %u terms\n",(unsigned)terms );}
+    }
+
+    printf("pi: started, %u terms\r\n", (unsigned)terms);
 }
 
 
@@ -205,9 +225,9 @@ static void cmd_pi(const command_t *command){
     (void)command;
     pi_task_state_t state = pi_task_get_state();
     if (state == PI_TASK_STATE_IDLE){
-        printf("pi: not started\n");
+        printf("pi: not started\r\n");
     }else if (state == PI_TASK_STATE_RUNNING){
-        printf("pi: running\n");
+        printf("pi: running\r\n");
     }else if (state == PI_TASK_STATE_READY){
         double result;
         uint64_t time_us;
@@ -243,7 +263,7 @@ static void cmd_profiling(const command_t *command)
 #else
 static void cmd_profiling(const command_t *command){
     (void)command;
-    printf("profiling is disabled in this build\n");
+    printf("profiling is disabled in this build\r\n");
 }
 #endif
 
@@ -251,5 +271,5 @@ static void cmd_profiling_reset(const command_t *command)
 {
     (void)command;
     profiling_reset();
-    printf("profiling reset\n");
+    printf("profiling reset\r\n");
 }

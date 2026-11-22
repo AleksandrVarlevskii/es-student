@@ -43,7 +43,7 @@ void profiling_stopwatch_init(uint32_t id, const char *name)
     sw->running  = false;
 }
 
-
+#if PROFILING_ENABLED
 void profiling_start(uint32_t id)
 {
     if (id >= PROFILING_MAX_STOPWATCHES){
@@ -99,7 +99,7 @@ void profiling_stop(uint32_t id)
     sw->sum_us += dt;                  // 32-битная сумма, переполнение ~71 мин
     if (dt > sw->max_us) sw->max_us = dt;
 }
-
+#endif
 
 
 bool profiling_get(uint32_t id, profiling_result_t *result)

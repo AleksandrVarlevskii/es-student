@@ -27,7 +27,6 @@ void api_handle(const command_t *command)
 
     // help — вне таблицы: печатает все команды со справкой
     if (strcmp(command->name, "help") == 0) {
-        printf("%-18s %s\r\n", "command", "description");
         printf("%-18s %s\r\n", "help", "lists all device commands, starting with help, one line per command");
         for (uint32_t i = 0; i < api_command_count; i++) {
             printf("%-18s %s\r\n", api_commands[i].name, api_commands[i].help);
