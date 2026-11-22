@@ -170,14 +170,18 @@ static void cmd_button(const command_t *command)
     
 }
 
+
+
 // PI
+
+
 static void cmd_pi_start(const command_t *command){
 
-    uint32_t terms;
+    uint32_t terms = 10000;
 
     if (command->argc != 1 || !parse_u32(command->argv[0], &terms))
     {
-        printf("error: usage pi_start <terms>\n");
+        printf("error: usage pi_start [<terms>]\n");
         return;
     } else if (terms == 0) {
         printf("error: terms must be greater than 0\n");
@@ -208,7 +212,7 @@ static void cmd_pi(const command_t *command){
         double result;
         uint64_t time_us;
         pi_task_get_result(&result, &time_us);
-        printf("pi: %.10f in %llu ms\r\n", result, (unsigned long long)(time_us/1000)); // convert to milliseconds
+        printf("pi: %.9f in %llu ms\r\n", result, (unsigned long long)(time_us/1000)); // convert to milliseconds
     }
 
 }
@@ -247,5 +251,5 @@ static void cmd_profiling_reset(const command_t *command)
 {
     (void)command;
     profiling_reset();
-    printf("profiling reset");
+    printf("profiling reset\n");
 }
