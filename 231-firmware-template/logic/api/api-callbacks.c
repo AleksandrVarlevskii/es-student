@@ -1,21 +1,18 @@
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+
+
+#include "api-commands.h"
+#include "device/device.h"
+#include "profiling/profiling.h"
+#include "led-task/led-task.h"
+#include "button-task/button-task.h"
+#include "pi-task/pi-task.h"
+#include "firmware.h"
+#include "systime/systime.h"
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
 
-#include "pico/stdlib.h"
-
-#include "api.h"
-#include "device/device.h"
-#include "profiling/profiling.h"
-#include "led-task.h"
-#include "button-task.h"
-#include "pi-task.h"
-#include "firmware.h"
-#include "systime/systime.h"
 
 // Прототипы — до таблицы
 static void cmd_info(const command_t *command);
@@ -50,7 +47,9 @@ const api_command_t api_commands[] = {
     { "profiling_reset", "reset all stopwatches",                          cmd_profiling_reset },
 };
 
-static const uint32_t api_command_count = sizeof(api_commands) / sizeof(api_commands[0]);
+const uint32_t api_command_count = sizeof(api_commands) / sizeof(api_commands[0]);
+
+
 
 static bool parse_u32(const char *text, uint32_t *value)
 {
@@ -73,35 +72,7 @@ static bool parse_u32(const char *text, uint32_t *value)
     return true;
 }
 
-void api_handle(const command_t *command)
-{
-    if (command == NULL || command->name == NULL) {
-        return;
-    }
 
-    if (command->truncated) {
-        printf("error: command truncated (max 63 chars, max 4 args)\r\n");
-        return;
-    }
-
-    // help — вне таблицы: печатает все команды со справкой
-    if (strcmp(command->name, "help") == 0) {
-        printf("%-18s %s\r\n", "command", "description");
-        for (uint32_t i = 0; i < api_command_count; i++) {
-            printf("%-18s %s\r\n", api_commands[i].name, api_commands[i].help);
-        }
-        return;
-    }
-
-    for (uint32_t i = 0; i < api_command_count; i++) {
-        if (strcmp(command->name, api_commands[i].name) == 0) {
-            api_commands[i].callback(command);
-            return;
-        }
-    }
-
-    printf("error: unknown command '%s', try help\r\n", command->name);
-}
 
 // --- обработчики ---
 

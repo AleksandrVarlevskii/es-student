@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "pico/stdlib.h"
 
 
 typedef enum {

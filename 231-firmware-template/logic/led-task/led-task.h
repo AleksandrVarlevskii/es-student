@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "pico/stdlib.h"
 
 typedef enum {
     LED_STATE_OFF,

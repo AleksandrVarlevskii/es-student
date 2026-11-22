@@ -1,27 +1,14 @@
-#include "led-task.h"
+
+#include "led-task/led-task.h"
 #include "logging/log.h"
 #include "systime/systime.h"
+#include "platform/platform.h"
 
-const uint LED_PIN = 25;
+
 
 static led_state_t led_state;
 static uint32_t half_period_ms = 500; // милисекунды 
 static uint64_t last_toggle_us = 0;
-
-
-static void led_set_level(bool level);
-static bool led_get_level(void);
-
-
-
-static void led_set_level(bool level)
-{
-    gpio_put(LED_PIN, level);
-}
-static bool led_get_level(void)
-{
-    return gpio_get(LED_PIN);
-}
 
 
 
@@ -30,8 +17,6 @@ static bool led_get_level(void)
 
 void led_task_init(void)
 {
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
     led_task_set_state(LED_STATE_BLINK);
     // настраиваем вывод светодиода, период 1000 мс, состояние «мигает»
 }
@@ -42,13 +27,13 @@ void led_task_set_state(led_state_t state)
     switch (led_state)
     {
         case LED_STATE_OFF:
-        led_set_level(false);
+        platform_led_set(false);
         break;
         case LED_STATE_ON:
-        led_set_level(true);
+        platform_led_set(true);
         break;
         case LED_STATE_BLINK:
-        led_set_level(!led_get_level());
+        platform_led_set(!platform_led_get());
         break;
         default:
         LOG_DBG("An led was made to establish a non-existent state of the led");
@@ -73,7 +58,7 @@ void led_task_handle(void)
         
         if (systime_period_elapsed(&last_toggle_us, half_period_ms*1000))
         {
-        led_set_level(!led_get_level());
+        platform_led_set(!platform_led_get());
         }
         break;
     }

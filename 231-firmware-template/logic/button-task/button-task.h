@@ -1,12 +1,16 @@
 #pragma once
 // button_task.h задача кнопки, обнаружить нажатие кнопки, отличив его от дребизга и в случае нажатия переключить режим работы светодиода в задаче led-task
+#include <stdbool.h>
+#include <stdint.h>
 
-#include "led-task.h"
-
+// функция, которую задача вызывает на каждое нажатие
+typedef void (*button_task_callback_t)(void);
 
 void button_task_handle(void); // обработчик задачи кнопка
 
-void button_task_init(void); // инициилизация задачи кнопка
+
+
+void button_task_init(button_task_callback_t on_press);
 
 
 bool button_task_is_pressed(void); // нигде не используется, нужно только для по требованию задания

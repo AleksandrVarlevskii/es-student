@@ -1,13 +1,16 @@
 #include "button-task.h"
+
 #include "systime/systime.h"
+#include "platform/platform.h"
+
+#include <stddef.h> // для NULL
 
 
-static const uint BUTTON_PIN = 15; // пин кнопки
 static const uint64_t BUTTON_DEBOUNCE_TIME = 20000; // порог времени, для защиты от времени (сколько сигнал должен продержаться что бы он был засчитан как нажатие кнопки) 
 static uint64_t last_toggle_us = 0;
 static uint32_t click_counter = 0; // счетчик нажатий
  
-
+static button_task_callback_t on_press_callback = NULL;
 
 typedef enum {
     BUTTON_STATE_PRESSED, // нажата
@@ -39,7 +42,7 @@ const char* get_button_statename(void)
 
 
 bool button_task_is_pressed(){
-    return button_state == BUTTON_STATE_PRESSED ;
+    return button_state == BUTTON_STATE_PRESSED;
 }
 uint32_t button_task_get_press_count(void){
     return click_counter;
@@ -47,14 +50,12 @@ uint32_t button_task_get_press_count(void){
 
 
 
-void button_task_init(void){
-    gpio_init(BUTTON_PIN);
-    gpio_set_dir(BUTTON_PIN, GPIO_IN);
-    gpio_pull_up(BUTTON_PIN); // включаем подтяжку к BUTTON_PIN, теперь там будет true в случае не нажатой кнопки и false в случае нажатой кнопки 
-    if(gpio_get(BUTTON_PIN) == true){
-        button_state = BUTTON_STATE_RELEASED_DEBOUNCE;
-    }else {
+void button_task_init(button_task_callback_t on_press){
+    on_press_callback = on_press;
+    if(platform_button_read()){
         button_state = BUTTON_STATE_PRESSED_DEBOUNCE;
+    }else {
+        button_state = BUTTON_STATE_RELEASED_DEBOUNCE;
     }
     last_toggle_us = systime_us(); // сбрасываем счетчик времени.
 }
@@ -63,40 +64,40 @@ void button_task_init(void){
 
 void button_task_handle(void)
 {
-    bool level = gpio_get(BUTTON_PIN);
+    bool pressed = platform_button_read();
     uint64_t now_us = systime_us();
 
     switch (button_state)
     {
         case BUTTON_STATE_PRESSED:
-            if (level == true){ // кнопка отжата
+            if (pressed == false){ // кнопка отжата
                 button_state = BUTTON_STATE_RELEASED_DEBOUNCE;
                 last_toggle_us = now_us; 
             }
             break;
         case BUTTON_STATE_RELEASED:
-            if (level == false){ // кнопка нажата
+            if (pressed == true){ // кнопка нажата
                 button_state = BUTTON_STATE_PRESSED_DEBOUNCE;
                 last_toggle_us = now_us;
             }
             break;
         case BUTTON_STATE_RELEASED_DEBOUNCE:
-            if (level == true && now_us - last_toggle_us >= BUTTON_DEBOUNCE_TIME){ // кнопка отжата и прошло время дребезга
+            if (pressed == false && now_us - last_toggle_us >= BUTTON_DEBOUNCE_TIME){ // кнопка отжата и прошло время дребезга
                 button_state = BUTTON_STATE_RELEASED;
 
             }
-            if (level == false){
+            if (pressed == true){
                 button_state = BUTTON_STATE_PRESSED_DEBOUNCE;
                 last_toggle_us = now_us; 
             }
             break;
         case BUTTON_STATE_PRESSED_DEBOUNCE:
-            if (level == false && now_us - last_toggle_us >= BUTTON_DEBOUNCE_TIME){ // кнопка нажата и прошло время дребезга
+            if (pressed == true && now_us - last_toggle_us >= BUTTON_DEBOUNCE_TIME){ // кнопка нажата и прошло время дребезга
                 button_state = BUTTON_STATE_PRESSED;
-                led_task_next_state();
+                on_press_callback();
                 click_counter++;
             }
-            if (level == true){
+            if (pressed == false){
                 button_state = BUTTON_STATE_RELEASED_DEBOUNCE;
                 last_toggle_us = now_us; 
             }
