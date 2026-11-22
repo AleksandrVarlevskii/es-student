@@ -76,23 +76,6 @@ uint32_t led_task_get_period_ms(void){
     return half_period_ms*2;
 }
 
-void print_led_state(void){
-    const char *name_state;
-    switch (led_state)
-    {
-    case LED_STATE_OFF:
-        name_state = "disable";
-        break;
-    case LED_STATE_ON:
-        name_state = "enable";
-        break;
-    default:
-        name_state = "blink";
-        break;
-    }
-
-    printf("led: %s, period %lu ms \r\n", name_state, half_period_ms*2);
-}
 
 void led_task_next_state(void){
     switch (led_state){

@@ -39,6 +39,7 @@ bool platform_button_read(void){
 
 
 void platform_init(void){
+    stdio_init_all();
     platform_led_init();
     platform_button_init();
     return;

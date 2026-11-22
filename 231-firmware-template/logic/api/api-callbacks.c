@@ -101,6 +101,22 @@ static void cmd_uptime(const command_t *command)
 
 // LED
 
+static void print_led_state(void){
+    const char *name_state;
+    switch (led_task_get_state())
+    {
+    case LED_STATE_OFF:
+        name_state = "off";
+        break;
+    case LED_STATE_ON:
+        name_state = "on";
+        break;
+    default:
+        name_state = "blink";
+        break;
+    }
+    printf("led: %s, period %lu ms \r\n", name_state, led_task_get_period_ms());
+}
 
 static void cmd_led_period(const command_t *command)
 {
@@ -164,7 +180,7 @@ static void cmd_pi_start(const command_t *command){
         printf("error: usage pi_start <terms>\n");
         return;
     } else if (terms == 0) {
-        printf("error: terms must be greater than 0 — <terms>\n");
+        printf("error: terms must be greater than 0\n");
         return;
     } else if (pi_task_get_state() == PI_TASK_STATE_RUNNING) {
         printf("error: pi is busy\n");
@@ -172,7 +188,7 @@ static void cmd_pi_start(const command_t *command){
     }else if (!pi_task_start(terms)) {
         printf("error: pi calculation is already running\n");
         return;
-    }
+    } else{ printf("pi: started, %u terms\n",(unsigned)terms );}
 }
 
 
@@ -185,7 +201,7 @@ static void cmd_pi(const command_t *command){
     (void)command;
     pi_task_state_t state = pi_task_get_state();
     if (state == PI_TASK_STATE_IDLE){
-        printf("error: pi: not started\n");
+        printf("pi: not started\n");
     }else if (state == PI_TASK_STATE_RUNNING){
         printf("pi: running\n");
     }else if (state == PI_TASK_STATE_READY){
@@ -231,4 +247,5 @@ static void cmd_profiling_reset(const command_t *command)
 {
     (void)command;
     profiling_reset();
+    printf("profiling reset");
 }

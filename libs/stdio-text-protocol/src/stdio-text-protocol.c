@@ -38,6 +38,7 @@ const command_t *stdio_text_protocol_handle(void)
         {
             LOG_DBG("got %s\n", line);
             char *p = line;
+            while (*p == ' ') p++; // пропускаем пробелы в начале
             request.name = p;
             while (*p && *p != ' ') p++;
                 if (*p == ' ') { *p = '\0'; p++; }

@@ -8,6 +8,7 @@
 #include "button-task/button-task.h"
 #include "pi-task/pi-task.h"
 #include "firmware.h"
+#include "platform/platform.h"
 
 
 
@@ -38,8 +39,6 @@ static void profiling_init_all(void)
 
 int main(){
     LOG_INF("%s %s\n", FIRMWARE_NAME, FIRMWARE_VERSION);
-    
-    stdio_init_all();
     platform_init();
 
 
