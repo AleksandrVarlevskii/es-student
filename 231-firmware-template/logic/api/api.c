@@ -1,3 +1,4 @@
+#include "api.h"
 #include "api-commands.h"
 
 #include <stdbool.h>
