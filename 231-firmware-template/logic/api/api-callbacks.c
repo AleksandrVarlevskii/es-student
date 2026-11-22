@@ -189,7 +189,7 @@ static void cmd_pi_start(const command_t *command){
     // 2. Аргумент есть? Тогда пробуем его распарсить
     if (command->argc == 1) {
         if (!parse_u32(command->argv[0], &terms)) {
-            printf("error: invalid number for terms\r\n");
+            printf("error: usage pi_start [<terms>]\r\n");
             return;
         }
         if (terms == 0) {
@@ -252,7 +252,7 @@ static void cmd_profiling(const command_t *command)
             ? (uint32_t)(((uint64_t)r.sum_us * 100) / r.number_measurements)
             : 0;
 
-        printf("%-10s count %-10u mean %u.%02u us  max %llu us\r\n",
+        printf("%-10s count %-10u mean %u.%02u us max %llu us\r\n",
                r.name,
                (unsigned)r.number_measurements,
                (unsigned)(mean_centi / 100),
