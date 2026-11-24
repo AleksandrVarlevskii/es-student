@@ -10,7 +10,7 @@
 #include "firmware.h"
 #include "platform/platform.h"
 
-
+#include <stddef.h> // для NULL
 
 enum {
     STOPWATCH_LOOP = 0,
@@ -43,7 +43,7 @@ int main(){
 
 
     led_task_init();
-    button_task_callback_t button_task_callback[BUTTON_COUNT] = {led_task_next_state, led_task_next_period};
+    button_task_callback_t button_task_callback[2*BUTTON_COUNT] = {led_task_next_state, led_task_blink_state, led_task_next_period, NULL};
     button_task_init(button_task_callback);
     stdio_text_protocol_init();
     pi_task_init();

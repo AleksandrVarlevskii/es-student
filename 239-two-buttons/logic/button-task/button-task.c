@@ -7,11 +7,9 @@
 #include <stddef.h> // для NULL
 
 
-static const uint64_t BUTTON_DEBOUNCE_TIME = 20000; // порог времени, для защиты от времени (сколько сигнал должен продержаться что бы он был засчитан как нажатие кнопки) 
-static uint64_t last_toggle_us[BUTTON_COUNT] = {0, 0};
-static uint32_t click_counter[BUTTON_COUNT] = {0, 0}; // счетчик нажатий
- 
-static button_task_callback_t* arr_on_press_callback = NULL;
+static const uint64_t BUTTON_DEBOUNCE_TIME = 20000; //(20 мс) порог времени в мкс, для защиты от времени (сколько сигнал должен продержаться что бы он был засчитан как нажатие кнопки) 
+static const uint64_t BUTTON_LONG_PRESSING = 1000000; // (1 секунда) порог времени в мкс какое время достаточно подождать, для засчета долгого нажатия. 
+
 
 typedef enum {
     BUTTON_STATE_PRESSED, // нажата
@@ -20,12 +18,31 @@ typedef enum {
     BUTTON_STATE_RELEASED_DEBOUNCE, //отжата? (ждем, что бы проверить не дребезг ли )
 } button_state_t;
 
-button_state_t button_state[BUTTON_COUNT]; 
+typedef struct {
+    button_state_t state;
+    platform_button_t platform_button;
+    button_task_callback_t on_fast_press_callback;
+    button_task_callback_t on_long_press_callback;
+    uint64_t last_toggle_us;
+    uint64_t press_start_us;
+    uint32_t click_counter;
+} button_t;
 
 
-const char* get_button_statename(platform_button_t button)
+static button_t buttons[BUTTON_COUNT];
+
+static button_t* get_button_t(platform_button_t platform_button){
+    for (int i=0; i< BUTTON_COUNT; i++){
+        if (buttons[i].platform_button == platform_button) {return &buttons[i];}
+    }
+    LOG_ERR("button_task: get_button_t : The corresponding platform_button_t value passed to the function was not found among the buttons. The first button was passed");
+    return &buttons[0];
+}
+
+const char* get_button_statename(platform_button_t platform_button)
 {
-    switch (button_state[button])
+    button_t* button = get_button_t(platform_button);
+    switch (button->state)
     {
         case BUTTON_STATE_PRESSED:
             return "pressed";
@@ -42,31 +59,38 @@ const char* get_button_statename(platform_button_t button)
 
 
 
-bool button_task_is_pressed(platform_button_t button){
-    return button_state[button] == BUTTON_STATE_PRESSED;
+bool button_task_is_pressed(platform_button_t platform_button){
+    return get_button_t(platform_button)->state == BUTTON_STATE_PRESSED;
 }
-uint32_t button_task_get_press_count(platform_button_t button){
-    return click_counter[button];
+uint32_t button_task_get_press_count(platform_button_t platform_button){
+    return get_button_t(platform_button)->click_counter;
 }
 
 
 
 void button_task_init(button_task_callback_t* arr_on_press){
-    arr_on_press_callback = arr_on_press;
-    if (arr_on_press == NULL){ LOG_ERR("button_task.c : button_task_init: function button_task_init was passed NULL instead of a pointer to an array of functions"); }
-    for (int button_i=0; button_i< BUTTON_COUNT; button_i++){
-        if (arr_on_press[button_i]== NULL){
-            LOG_ERR("button_task.c : button_task_init : NULL was passed to the %i button instead of a function pointer.", button_i);
-        }
+    
+    for (int j=0; j<BUTTON_COUNT; j++){
+        button_t button = {
+            .state = BUTTON_STATE_RELEASED,
+            .platform_button = (platform_button_t)j,
+            .on_fast_press_callback = (arr_on_press != NULL) ? arr_on_press[2 * j]     : NULL,
+            .on_long_press_callback = (arr_on_press != NULL) ? arr_on_press[2 * j + 1] : NULL,
+            .click_counter = 0,
+            .last_toggle_us = systime_us(),
+            .press_start_us = 0,
+            
+        }; 
+        buttons[j] = button;
     }
-    for (int button_i =0; button_i< BUTTON_COUNT; button_i++){
-            if(platform_button_read(button_i)){
-        button_state[button_i] = BUTTON_STATE_PRESSED_DEBOUNCE;
-    }else {
-        button_state[button_i] = BUTTON_STATE_RELEASED_DEBOUNCE;
-    }
-    last_toggle_us[button_i] = systime_us(); // сбрасываем счетчик времени.
-    }
+    
+    // for (int j=0; j< BUTTON_COUNT; j++){
+    //         if(platform_button_read(buttons[j].platform_button)){
+    //     buttons[j].state= BUTTON_STATE_PRESSED_DEBOUNCE;
+    // }else {
+    //     buttons[j].state = BUTTON_STATE_RELEASED_DEBOUNCE;
+    // }
+    // }
 
 
 }
@@ -75,47 +99,49 @@ void button_task_init(button_task_callback_t* arr_on_press){
 
 void button_task_handle(void)
 {
-    for (int button_i=0; button_i<BUTTON_COUNT; button_i++){
-        bool pressed = platform_button_read(button_i);
-        uint64_t now_us = systime_us();
+    uint64_t now_us = systime_us();
+    for (int j=0; j<BUTTON_COUNT; j++){
+        button_t* button = &buttons[j];
+        bool pressed = platform_button_read(button->platform_button);
         
-        switch (button_state[button_i])
+
+        switch (button->state)
         {
             case BUTTON_STATE_PRESSED:
                 if (pressed == false){ // кнопка отжата
-                    button_state[button_i] = BUTTON_STATE_RELEASED_DEBOUNCE;
-                    last_toggle_us[button_i] = now_us; 
+                    button->state = BUTTON_STATE_RELEASED_DEBOUNCE;
+                    button->last_toggle_us = now_us; 
                 }
+                
                 break;
             case BUTTON_STATE_RELEASED:
                 if (pressed == true){ // кнопка нажата
-                    button_state[button_i] = BUTTON_STATE_PRESSED_DEBOUNCE;
-                    last_toggle_us[button_i] = now_us;
+                    button->state = BUTTON_STATE_PRESSED_DEBOUNCE;
+                    button->last_toggle_us = now_us;
+                    button->press_start_us = now_us;  
                 }
                 break;
             case BUTTON_STATE_RELEASED_DEBOUNCE:
-                if (pressed == false && now_us - last_toggle_us[button_i] >= BUTTON_DEBOUNCE_TIME){ // кнопка отжата и прошло время дребезга
-                    button_state[button_i] = BUTTON_STATE_RELEASED;
-
-                }
-                if (pressed == true){
-                    button_state[button_i] = BUTTON_STATE_PRESSED_DEBOUNCE;
-                    last_toggle_us[button_i] = now_us; 
+                if (pressed == false && now_us - button->last_toggle_us >= BUTTON_DEBOUNCE_TIME){ // кнопка отжата и прошло время дребезга
+                    button->state = BUTTON_STATE_RELEASED;
+                    if (button->press_start_us != 0 && now_us - button->press_start_us >= BUTTON_LONG_PRESSING && button->on_long_press_callback != NULL ){
+                        button->on_long_press_callback();
+                    }else{
+                        if (button->on_fast_press_callback != NULL){button->on_fast_press_callback();}
+                    }
+                    button->click_counter++;
+                }else if (pressed == true){
+                    button->state = BUTTON_STATE_PRESSED_DEBOUNCE;
+                    button->last_toggle_us = now_us; 
+                    button->press_start_us = now_us; 
                 }
                 break;
             case BUTTON_STATE_PRESSED_DEBOUNCE:
-                if (pressed == true && now_us - last_toggle_us[button_i] >= BUTTON_DEBOUNCE_TIME){ // кнопка нажата и прошло время дребезга
-                    button_state[button_i] = BUTTON_STATE_PRESSED;
-                    if (arr_on_press_callback[button_i] != NULL){
-                    arr_on_press_callback[button_i]();
-                    }else{
-                        LOG_DBG("button_task.c : button_task_handle : button %i tries to call the NULL function, but nothing was called instead.", button_i);
-                    }
-                    click_counter[button_i]++;
-                }
-                if (pressed == false){
-                    button_state[button_i] = BUTTON_STATE_RELEASED_DEBOUNCE;
-                    last_toggle_us[button_i] = now_us; 
+                if (pressed == true && now_us - button->last_toggle_us >= BUTTON_DEBOUNCE_TIME){ // кнопка нажата и прошло время дребезга
+                    button->state = BUTTON_STATE_PRESSED;
+                }else if(pressed == false){
+                    button->state = BUTTON_STATE_RELEASED_DEBOUNCE;
+                    button->last_toggle_us = now_us; 
                 }
                 break;
         }
